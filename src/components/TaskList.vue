@@ -1,60 +1,63 @@
 <script setup>
+import { ref, computed } from 'vue'
 
-import {ref, computed, watch} from 'vue'
-
-import TascaItem from './TaskItem.vue'
-import { Tasca } from './models/Tasca.js';
-
-const tasques = ref([])
+import TaskItem from './TaskItem.vue'
 
 const props = defineProps({
-    nom:String
+  tasques: {
+    type: Array,
+    required: true
+  }
 })
 
-watch(() => props.nom, (nuevoValor) => {
-    if (props.nom.length > 0){
-    const nouId = tasques.value.length > 0 
-        ? tasques.value[tasques.value.length - 1].id + 1 
-        : 1;
-
-    const novaTasca = new Tasca(nouId, props.nom);
-
-    tasques.value.push(novaTasca);
-    }
-
-    console.log('Hijo 1: ' + props.nom)
-})
-
+const emit = defineEmits(['marcarTasca', 'borrarTasca'])
 
 const nomesPendents = ref(false)
 
 const tasquesFiltrades = computed(() => {
-
-    if (nomesPendents.value) {
-        return tasques.value.filter(tasca => !tasca.completada)
-    }
-    return tasques.value
+  if (nomesPendents.value) {
+    return props.tasques.filter(tasca => !tasca.completada)
+  }
+  return props.tasques
 })
-
-
-
 </script>
+
 <template>
-    <div>
-        <label>
-            <input type="checkbox"/>
-            Mostra només pendents
-        </label>
-    </div>
+  <div>
+    <label>
+      <input type="checkbox" v-model="nomesPendents" />
+      Mostra només pendents
+    </label>
+  </div>
 
-    <div>
-        <p v-if="tasquesFiltrades.length === 0">No hi ha tasques per mostrar</p>
+  <div>
+    <p v-if="tasquesFiltrades.length === 0">No hi ha tasques per mostrar</p>
 
-        <ul v-else>
-            <TascaItem v-for="tasca in tasquesFiltrades" 
-                :key="tasca.id" 
-                :tasca="tasca"
-                />
-        </ul>
-    </div>
+    <ul v-else>
+      <TaskItem
+        v-for="tasca in tasquesFiltrades"
+        :key="tasca.id"
+        :tasca="tasca"
+        @marcar-tasca="emit('marcarTasca', $event)"
+        @borrar-tasca="emit('borrarTasca', $event)"
+      />
+    </ul>
+  </div>
 </template>
+
+<style scoped>
+div {
+  text-align: center;
+  margin: 12px 0;
+}
+
+p {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+</style>
